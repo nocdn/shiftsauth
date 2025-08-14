@@ -1,6 +1,7 @@
 // lib/auth.ts
 import { betterAuth } from "better-auth"
 import { nextCookies } from "better-auth/next-js"
+import { username } from "better-auth/plugins"
 import Database from "better-sqlite3"
 
 // Tiny file DB for dev; change the path for prod (or switch to Postgres/MySQL later).
@@ -20,5 +21,5 @@ export const auth = betterAuth({
   },
 
   // makes cookies work automatically inside Server Actions in Next
-  plugins: [nextCookies()],
+  plugins: [nextCookies(), username()],
 })

@@ -1,50 +1,99 @@
 "use client"
 import { AnimatePresence, motion } from "motion/react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+
+type Mode = "signin" | "signup"
 
 export default function LoginForm({
-  onLogin,
+  mode,
+  onSubmit,
   className,
 }: {
-  onLogin: (email: string, password: string) => void
+  mode: Mode
+  onSubmit: (values: {
+    username: string
+    password: string
+    email?: string
+  }) => void
   className?: string
 }) {
-  const [email, setEmail] = useState("")
-  const emailInputRef = useRef<HTMLInputElement>(null)
-  const [showingEmailPage, setShowingEmailPage] = useState<boolean>(true)
-  const [showingPasswordPage, setShowingPasswordPage] = useState<boolean>(false)
-  const [emailError, setEmailError] = useState<boolean>(false)
+  const [step, setStep] = useState<1 | 2 | 3>(mode === "signin" ? 1 : 1)
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const passwordInputRef = useRef<HTMLInputElement>(null)
+  const [email, setEmail] = useState("")
+
+  const usernameRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
+  const emailRef = useRef<HTMLInputElement>(null)
+
+  const [usernameError, setUsernameError] = useState(false)
+  const [passwordError, setPasswordError] = useState(false)
+  const [emailError, setEmailError] = useState(false)
+
+  useEffect(() => {
+    if (step === 1) usernameRef.current?.focus()
+    if (step === 2) passwordRef.current?.focus()
+    if (step === 3) emailRef.current?.focus()
+  }, [step])
+
+  function isValidUsername(u: string) {
+    // Better Auth default: alphanumerics, underscores, dots; min 3 chars
+    return /^[a-zA-Z0-9._]{3,30}$/.test(u)
+  }
+
+  function isValidEmail(e: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
+  }
 
   function handleClick() {
-    if (!checkEmailSyntax()) {
-      console.log("invalid email")
-      setEmailError(true)
-      setTimeout(() => {
-        setEmailError(false)
-      }, 1000)
+    if (step === 1) {
+      if (!isValidUsername(username)) {
+        setUsernameError(true)
+        setTimeout(() => setUsernameError(false), 1000)
+        return
+      }
+      setStep(2)
+      setPassword("") // clear prior value for safety
       return
     }
-    setShowingEmailPage(false)
-    setPassword("") // Clear password state
-    setTimeout(() => {
-      setShowingPasswordPage(true)
-      // Focus on password input when it appears
-      if (passwordInputRef.current) {
-        passwordInputRef.current.focus()
+
+    if (step === 2) {
+      if (!password) {
+        setPasswordError(true)
+        setTimeout(() => setPasswordError(false), 1000)
+        return
       }
-    }, 100)
-    if (email.length > 0 && password.length > 0) {
-      onLogin(email, password)
+      if (mode === "signin") {
+        onSubmit({ username, password })
+      } else {
+        setStep(3)
+      }
+      return
+    }
+
+    if (step === 3) {
+      if (!isValidEmail(email)) {
+        setEmailError(true)
+        setTimeout(() => setEmailError(false), 1000)
+        return
+      }
+      onSubmit({ username, password, email })
     }
   }
 
-  function checkEmailSyntax() {
-    // check if email is valid with regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+  const buttonLabel =
+    step === 1
+      ? "Continue"
+      : step === 2
+        ? mode === "signin"
+          ? "Login"
+          : "Continue"
+        : "Create account"
+
+  const disabled =
+    (step === 1 && username.length === 0) ||
+    (step === 2 && password.length === 0) ||
+    (step === 3 && email.length === 0)
 
   return (
     <div
@@ -52,13 +101,10 @@ export default function LoginForm({
     >
       <div className="grid">
         <AnimatePresence mode="wait">
-          {showingEmailPage && (
+          {step === 1 && (
             <motion.div
-              initial={{
-                opacity: 1,
-                y: 0,
-                filter: "blur(0px)",
-              }}
+              key="step-1"
+              initial={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{
                 opacity: 0,
                 y: -75,
@@ -66,20 +112,25 @@ export default function LoginForm({
                 filter: "blur(5px)",
                 originX: 0,
               }}
-              transition={{
-                duration: 0.5,
-                ease: [0, 0, 0.2, 1],
-              }}
+              transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
               className="flex flex-col gap-0.5 font-semibold col-start-1 row-start-1"
             >
-              <p className="text-xl text-gray-500">Access Shifts</p>
-              <p className="text-xl">What is your email?</p>
+              <p className="text-xl text-gray-500">
+                {mode === "signin" ? "Access Shifts" : "Create Shifts account"}
+              </p>
+              <p className="text-xl">
+                {mode === "signin"
+                  ? "What is your username?"
+                  : "Pick a username"}
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
+
         <AnimatePresence mode="wait">
-          {showingPasswordPage && (
+          {step === 2 && (
             <motion.div
+              key="step-2"
               initial={{
                 opacity: 0,
                 y: 25,
@@ -94,61 +145,99 @@ export default function LoginForm({
                 scale: 1,
                 filter: "blur(0px)",
               }}
-              transition={{
-                duration: 0.5,
-                ease: [0, 0, 0.2, 1],
-              }}
+              transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
               className="flex flex-col gap-0.5 font-semibold col-start-1 row-start-1"
             >
               <p className="text-xl text-gray-500">
-                Hello,{" "}
-                {email.split("@")[0].charAt(0).toUpperCase() +
-                  email.split("@")[0].slice(1)}
+                Hello, {username.charAt(0).toUpperCase() + username.slice(1)}
               </p>
               <p className="text-xl">What is your password?</p>
             </motion.div>
           )}
         </AnimatePresence>
+
+        <AnimatePresence mode="wait">
+          {step === 3 && mode === "signup" && (
+            <motion.div
+              key="step-3"
+              initial={{
+                opacity: 0,
+                y: 25,
+                originX: 0,
+                scale: 0.9,
+                filter: "blur(6px)",
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                originX: 0,
+                scale: 1,
+                filter: "blur(0px)",
+              }}
+              transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
+              className="flex flex-col gap-0.5 font-semibold col-start-1 row-start-1"
+            >
+              <p className="text-xl text-gray-500">Last step</p>
+              <p className="text-xl">What is your email?</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
       <div className="flex justify-between group border-b-[1.5px] border-gray-200 pb-1.5 group-focus-within:border-gray-300 transition-colors">
-        {showingEmailPage ? (
+        {step === 1 && (
           <input
             type="text"
-            placeholder="sylwia@work.bartoszbak.org"
+            placeholder="bartosz"
+            value={username}
+            className={`w-56 font-medium focus:outline-none transition-colors placeholder:text-gray-400 ${
+              usernameError ? "text-red-500" : ""
+            }`}
+            data-1p-ignore
+            ref={usernameRef}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        )}
+
+        {step === 2 && (
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            className={`w-56 font-medium focus:outline-none transition-colors placeholder:text-gray-400 ${
+              passwordError ? "text-red-500" : ""
+            }`}
+            data-1p-ignore
+            ref={passwordRef}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        )}
+
+        {step === 3 && mode === "signup" && (
+          <input
+            type="text"
+            placeholder="name@example.com"
             value={email}
             className={`w-56 font-medium focus:outline-none transition-colors placeholder:text-gray-400 ${
               emailError ? "text-red-500" : ""
             }`}
             data-1p-ignore
-            ref={emailInputRef}
-            onChange={(e) => {
-              console.log("Input value:", e.target.value)
-              setEmail(e.target.value)
-            }}
-          />
-        ) : (
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            className="w-56 font-medium focus:outline-none transition-colors placeholder:text-gray-400"
-            data-1p-ignore
-            ref={passwordInputRef}
-            onChange={(e) => {
-              console.log("Input value:", e.target.value)
-              setPassword(e.target.value)
-            }}
+            ref={emailRef}
+            onChange={(e) => setEmail(e.target.value)}
           />
         )}
+
         <button
           onClick={handleClick}
-          disabled={email.length === 0}
+          disabled={disabled}
           className={`font-medium cursor-pointer group-focus-within:border-gray-300 transition-all relative ${
-            emailError ? "text-red-500 scale-95" : ""
+            usernameError || passwordError || emailError
+              ? "text-red-500 scale-95"
+              : ""
           }`}
         >
           <AnimatePresence>
-            {emailError && (
+            {(usernameError || passwordError || emailError) && (
               <motion.div
                 initial={{ opacity: 0, y: -25 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -160,7 +249,7 @@ export default function LoginForm({
               </motion.div>
             )}
           </AnimatePresence>
-          {showingEmailPage ? "Continue" : "Login"}
+          {buttonLabel}
         </button>
       </div>
     </div>
