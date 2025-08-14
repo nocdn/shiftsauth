@@ -1,8 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=IBM+Plex+Mono:wght@300;400;500;600;700&family=JetBrains+Mono:wght@100..800&display=swap");
 @import "tailwindcss";
+@plugin "tailwindcss-motion";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  touch-action: manipulation;
 }
 
 @theme inline {
@@ -12,15 +15,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@theme {
+  --font-geist: "Geist", sans-serif;
+  --font-geist-mono: "Geist Mono", monospace;
+  --font-ibm-mono: "IBM Plex Mono", monospace;
+  --font-jetbrains-mono: "JetBrains Mono", monospace;
+  --font-sf-pro-rounded: "SF Pro Rounded", sans-serif;
+  --font-sf-pro-text: "SF Pro Text", sans-serif;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
