@@ -38,6 +38,56 @@ export default function Admin() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  async function submitFile() {
+    setIsSubmitting(true)
+    if (!file) return
+    if (cropperRef.current) {
+      const canvas = cropperRef.current.getCanvas()
+      if (canvas) {
+        canvas.toBlob(async (blob) => {
+          if (!blob) return
+          console.log("Cropped blob:", blob)
+          const dataUrl = canvas.toDataURL("image/png")
+          console.log("Cropped data URL:", dataUrl)
+          const formData = new FormData()
+          formData.append("image", blob, file.name)
+          for (const [key, value] of formData.entries()) {
+            console.log("FormData entry:", key, value)
+          }
+          try {
+            const response = await fetch("/api/upload", {
+              method: "POST",
+              body: formData,
+            })
+            const data = await response.json()
+            console.log(data)
+            setIsSubmitting(false)
+          } catch (error) {
+            console.error(error)
+          }
+        }, "image/png")
+        return
+      }
+    }
+    const formData = new FormData()
+    formData.append("image", file)
+    console.log("Fallback file:", file)
+    for (const [key, value] of formData.entries()) {
+      console.log("FormData entry:", key, value)
+    }
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await response.json()
+      console.log(data)
+      setIsSubmitting(false)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   return (
     <main className="md:px-24 md:pt-18 p-8 flex flex-col gap-6 max-w-3xl">
       <div className="flex flex-col gap-1">
@@ -66,7 +116,10 @@ export default function Admin() {
             <div className="flex items-center gap-2 mt-2">
               <div
                 className="rounded-md border border-gray-200 font-sf-pro-rounded font-medium w-full text-sm cursor-pointer py-2"
-                onClick={() => setIsSubmitting(true)}
+                onClick={() => {
+                  setIsSubmitting(true)
+                  submitFile()
+                }}
               >
                 <AnimatePresence mode="wait">
                   {isSubmitting ? (

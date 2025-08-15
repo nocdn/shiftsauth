@@ -6,7 +6,7 @@ import AdminClient from "./AdminClient"
 export default async function AdminPage() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session) redirect("/login")
-  if (!session.user?.is_admin) redirect("/") // optional guard
+  if (session.user?.role !== "admin") redirect("/")
 
   return <AdminClient />
 }

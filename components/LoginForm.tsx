@@ -37,7 +37,6 @@ export default function LoginForm({
   }, [step])
 
   function isValidUsername(u: string) {
-    // Better Auth default: alphanumerics, underscores, dots; min 3 chars
     return /^[a-zA-Z0-9._]{3,30}$/.test(u)
   }
 
@@ -53,7 +52,7 @@ export default function LoginForm({
         return
       }
       setStep(2)
-      setPassword("") // clear prior value for safety
+      setPassword("")
       return
     }
 

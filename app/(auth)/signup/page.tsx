@@ -1,4 +1,3 @@
-// app/(auth)/signup/page.tsx
 "use client"
 import LoginForm from "@/components/LoginForm"
 import { useRouter } from "next/navigation"
@@ -16,21 +15,18 @@ export default function Signup() {
     password: string
     email?: string
   }) => {
-    // Create the account with username + email + password
     const { error: signUpError } = await authClient.signUp.email({
-      email: email!, // required by API
+      email: email!,
       password,
       username,
-      name: username, // optional
+      name: username,
     })
-
     if (signUpError) {
       console.error("Sign up error:", signUpError)
       return
     }
 
-    // Ensure the user is signed in (explicit even if your config auto-signs in)
-    const { data, error: signInError } = await authClient.signIn.username({
+    const { error: signInError } = await authClient.signIn.username({
       username,
       password,
     })
@@ -39,8 +35,9 @@ export default function Signup() {
       return
     }
 
-    const isAdmin = data?.user?.is_admin === true
-    router.replace(isAdmin ? "/admin" : "/")
+    const { data: session } = await authClient.getSession()
+    const role = session?.user?.role
+    router.replace(role === "admin" ? "/admin" : "/")
   }
 
   return (

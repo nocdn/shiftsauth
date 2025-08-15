@@ -30,3 +30,13 @@
     --foreground: #ededed;
   }
 }
+
+.spin-fast {
+  animation: spin 1.3s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+}
