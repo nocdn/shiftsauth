@@ -2,14 +2,21 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react"
 import { MoveRight } from "lucide-react"
 import Spinner from "@/components/Spinner"
+import { AnimatePresence, motion } from "motion/react"
 
 export default function UserNameClient({ username }: { username: string }) {
   const [allShifts, setAllShifts] = useState<any[]>([])
   const [shifts, setShifts] = useState<any[]>([])
   const [thisWeekShifts, setThisWeekShifts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   function localWeekCommencingToDisplay() {
-    return "2025-07-28"
+    const today = new Date()
+    const dayOfWeek = today.getDay()
+    const daysUntilMonday = (dayOfWeek + 6) % 7
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - daysUntilMonday)
+    return monday.toISOString().split("T")[0]
   }
 
   useEffect(() => {
@@ -28,31 +35,20 @@ export default function UserNameClient({ username }: { username: string }) {
 
       // get the week commencing of this week
       const thisWeekCommencing = localWeekCommencingToDisplay()
-      console.log(thisWeekCommencing)
-      const filteredThisWeekShifts = [
-        {
-          start: "2025-07-28T13:00:00+01:00",
-          end: "2025-07-28T20:00:00+01:00",
-        },
-        {
-          start: "2025-07-29T08:00:00+01:00",
-          end: "2025-07-29T15:00:00+01:00",
-        },
-        {
-          start: "2025-07-30T12:00:00+01:00",
-          end: "2025-07-30T20:00:00+01:00",
-        },
-        {
-          start: "2025-08-02T14:00:00+01:00",
-          end: "2025-08-02T20:00:00+01:00",
-        },
-        {
-          start: "2025-08-03T09:00:00+01:00",
-          end: "2025-08-03T17:00:00+01:00",
-        },
-      ]
-      setThisWeekShifts(filteredThisWeekShifts)
-      console.log(filteredThisWeekShifts)
+      console.log("this week commencing", thisWeekCommencing)
+      const filteredThisWeekShifts = filteredShifts.filter((shift: any) =>
+        shift.week_commencing.includes(thisWeekCommencing),
+      )
+      console.log("filtered this week shifts", filteredThisWeekShifts)
+      // flatten and parse each shift entry; backend returns `shifts` as JSON strings
+      const parsedWeekShifts = filteredThisWeekShifts.flatMap((person: any) =>
+        (person.shifts || []).map((s: any) =>
+          typeof s === "string" ? JSON.parse(s) : s,
+        ),
+      )
+      console.log("this week parsed shifts", parsedWeekShifts)
+      setThisWeekShifts(parsedWeekShifts)
+      setIsLoading(false)
     }
     fetchShifts()
   }, [])
@@ -90,7 +86,7 @@ export default function UserNameClient({ username }: { username: string }) {
     backgroundImage: `
       linear-gradient(to right, white 0%, rgba(255,255,255,0.85) 4%, transparent 20%, transparent 80%, rgba(255,255,255,0.85) 96%, white 100%),
       linear-gradient(to bottom, white 0%, rgba(255,255,255,0.85) 5%, transparent 10%, transparent 90%, rgba(255,255,255,0.85) 95%, white 100%),
-      repeating-linear-gradient(135deg, rgba(59,130,246,0.08) 0px, rgba(59,130,246,0.08) 10px, transparent 10px, transparent 20px)
+      repeating-linear-gradient(135deg, rgba(59,130,246,0.05) 0px, rgba(59,130,246,0.05) 10px, transparent 10px, transparent 20px)
     `,
     backgroundBlendMode: "normal",
   }
@@ -99,7 +95,17 @@ export default function UserNameClient({ username }: { username: string }) {
     <div className="flex flex-col gap-1.5 p-8 font-sf-pro-rounded">
       <h1 className="text-2xl font-medium flex items-center justify-between">
         Hello {username.charAt(0).toUpperCase() + username.slice(1)},
-        <Spinner className="opacity-50 mt-1" size={0.85} />
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1, transition: { duration: 0.25 } }}
+              exit={{ opacity: 0, transition: { duration: 0.3 } }}
+            >
+              <Spinner className="opacity-50 mt-1" size={0.85} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </h1>
       <h2 className="text-[15px] font-medium text-gray-600 font-jetbrains-mono">
         [SHIFTS THIS WEEK]
@@ -109,7 +115,13 @@ export default function UserNameClient({ username }: { username: string }) {
           const dayShifts = shiftsByDay[index] || []
           const hasShifts = dayShifts.length > 0
           return (
-            <div key={dayLabel} className="flex">
+            <div
+              key={dayLabel}
+              className="flex"
+              onClick={() => {
+                console.log("showing extra info for", dayShifts)
+              }}
+            >
               <div className="w-24 shrink-0 bg-gray-50/70 px-4 py-3 text-[12.5px] tracking-[0.14em] text-gray-700 font-jetbrains-mono grid place-items-center">
                 {dayLabel}
               </div>
