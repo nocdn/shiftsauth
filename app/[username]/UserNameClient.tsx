@@ -1,8 +1,9 @@
 "use client"
 import { useEffect, useMemo, useState, type CSSProperties } from "react"
-import { MoveRight, X } from "lucide-react"
+import { LogOut, MoveRight, X } from "lucide-react"
 import Spinner from "@/components/Spinner"
 import { AnimatePresence, motion } from "motion/react"
+import { authClient } from "@/lib/auth-client"
 
 export default function UserNameClient({ username }: { username: string }) {
   const [allShifts, setAllShifts] = useState<any[]>([])
@@ -93,7 +94,7 @@ export default function UserNameClient({ username }: { username: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-1.5 p-8 font-sf-pro-rounded">
+    <div className="flex flex-col gap-1.5 p-8 font-sf-pro-rounded h-dvh">
       <h1 className="text-2xl font-medium flex items-center justify-between">
         Hello {username.charAt(0).toUpperCase() + username.slice(1)},
         <AnimatePresence>
@@ -150,7 +151,10 @@ export default function UserNameClient({ username }: { username: string }) {
                     })),
                   }))
                 console.log(`Others working on ${dayLabel}:`, othersWorking)
-                setExtraDataForShift(othersWorking)
+                setExtraDataForShift(null)
+                setTimeout(() => {
+                  setExtraDataForShift(othersWorking)
+                }, 50)
               }}
             >
               <div className="w-24 shrink-0 bg-gray-50/70 px-4 py-3 text-[12.5px] tracking-[0.14em] text-gray-700 font-jetbrains-mono grid place-items-center">
@@ -215,7 +219,7 @@ export default function UserNameClient({ username }: { username: string }) {
                 extraDataForShift.map((entry: any) => (
                   <div
                     key={entry.person}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-gray-200/70 bg-gray-50/60 px-3 py-2"
                   >
                     <div className="text-gray-800 font-medium font-geist">
                       {entry.person}
@@ -243,6 +247,15 @@ export default function UserNameClient({ username }: { username: string }) {
           </motion.div>
         )}
       </AnimatePresence>
+      <motion.button
+        className="rounded-xl md:text-md text-lg w-fit text-red-800 font-sf-pro-rounded px-0.5 font-medium cursor-pointer hover:opacity-60 hover:scale-[102%] transition-all duration-200 flex items-center gap-2 mt-auto"
+        onClick={async () => {
+          await authClient.signOut()
+        }}
+      >
+        <LogOut className="text-red-800" size={13.5} strokeWidth={2.5} />
+        Sign Out
+      </motion.button>
     </div>
   )
 }
