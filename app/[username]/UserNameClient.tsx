@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useMemo, useState, type CSSProperties } from "react"
-import { MoveRight } from "lucide-react"
+import { MoveRight, X } from "lucide-react"
 import Spinner from "@/components/Spinner"
 import { AnimatePresence, motion } from "motion/react"
 
@@ -9,6 +9,7 @@ export default function UserNameClient({ username }: { username: string }) {
   const [shifts, setShifts] = useState<any[]>([])
   const [thisWeekShifts, setThisWeekShifts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [extraDataForShift, setExtraDataForShift] = useState<any>(null)
 
   function localWeekCommencingToDisplay() {
     const today = new Date()
@@ -119,7 +120,37 @@ export default function UserNameClient({ username }: { username: string }) {
               key={dayLabel}
               className="flex"
               onClick={() => {
-                console.log("showing extra info for", dayShifts)
+                const thisWeekCommencing = localWeekCommencingToDisplay()
+                const othersForWeek = (allShifts || []).filter(
+                  (row: any) =>
+                    typeof row.week_commencing === "string" &&
+                    row.week_commencing.includes(thisWeekCommencing) &&
+                    row.person_name?.toLowerCase() !== username.toLowerCase(),
+                )
+                const othersWorking = othersForWeek
+                  .map((person: any) => {
+                    const parsed = (person.shifts || []).map((s: any) =>
+                      typeof s === "string" ? JSON.parse(s) : s,
+                    ) as { start: string; end: string }[]
+                    const todays = parsed.filter((s) => {
+                      const jsDay = new Date(s.start).getDay()
+                      const mondayFirstIndex = (jsDay + 6) % 7
+                      return mondayFirstIndex === index
+                    })
+                    return todays.length > 0
+                      ? { person: person.person_name, shifts: todays }
+                      : null
+                  })
+                  .filter(Boolean)
+                  .map((entry: any) => ({
+                    person: entry.person,
+                    shifts: entry.shifts.map((s: any) => ({
+                      start: formatTime(s.start),
+                      end: formatTime(s.end),
+                    })),
+                  }))
+                console.log(`Others working on ${dayLabel}:`, othersWorking)
+                setExtraDataForShift(othersWorking)
               }}
             >
               <div className="w-24 shrink-0 bg-gray-50/70 px-4 py-3 text-[12.5px] tracking-[0.14em] text-gray-700 font-jetbrains-mono grid place-items-center">
@@ -151,6 +182,67 @@ export default function UserNameClient({ username }: { username: string }) {
           )
         })}
       </div>
+      <AnimatePresence>
+        {extraDataForShift && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              filter: "blur(0px)",
+            }}
+            exit={{
+              opacity: 0,
+              filter: "blur(3px)",
+              y: 5,
+            }}
+            className="text-sm text-gray-500 mt-7"
+          >
+            <h2 className="text-[15px] font-medium text-gray-600 font-jetbrains-mono mb-3 flex items-center justify-between">
+              [PEOPLE ALSO WORKING]
+              <div
+                className="w-6 h-6 bg-gray-100 text-[#949595] rounded-full flex items-center justify-center"
+                onClick={() => {
+                  setExtraDataForShift(null)
+                }}
+              >
+                <X strokeWidth={2.75} size={16} />
+              </div>
+            </h2>
+            <div className="mt-2 space-y-2">
+              {Array.isArray(extraDataForShift) &&
+              extraDataForShift.length > 0 ? (
+                extraDataForShift.map((entry: any) => (
+                  <div
+                    key={entry.person}
+                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2"
+                  >
+                    <div className="text-gray-800 font-medium font-geist">
+                      {entry.person}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {entry.shifts.map((s: any, i: number) => (
+                        <div
+                          key={`${entry.person}-${i}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-0.5 text-[12px] font-jetbrains-mono text-gray-700"
+                        >
+                          <span>{s.start}</span>
+                          <MoveRight size={12} className="text-gray-400" />
+                          <span>{s.end}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-[13px] text-gray-500 mt-1">
+                  Click a day above to see who else is working.
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
