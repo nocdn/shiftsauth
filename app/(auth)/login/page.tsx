@@ -24,7 +24,7 @@ export default function Login() {
   }
 
   return (
-    <main className="flex h-dvh w-screen justify-center items-center px-8">
+    <main className="flex h-dvh w-screen justify-center items-center px-8 motion-preset-blur-up-sm">
       <LoginForm mode="signin" onSubmit={handleSubmit} className="w-96" />
     </main>
   )

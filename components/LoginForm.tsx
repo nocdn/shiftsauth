@@ -1,4 +1,5 @@
 "use client"
+import Spinner from "@/components/Spinner"
 import { AnimatePresence, motion } from "motion/react"
 import { useEffect, useRef, useState } from "react"
 
@@ -29,6 +30,8 @@ export default function LoginForm({
   const [usernameError, setUsernameError] = useState(false)
   const [passwordError, setPasswordError] = useState(false)
   const [emailError, setEmailError] = useState(false)
+
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (step === 1) usernameRef.current?.focus()
@@ -63,6 +66,7 @@ export default function LoginForm({
         return
       }
       if (mode === "signin") {
+        setIsLoading(true)
         onSubmit({ username, password })
       } else {
         setStep(3)
@@ -76,7 +80,25 @@ export default function LoginForm({
         setTimeout(() => setEmailError(false), 1000)
         return
       }
+      setIsLoading(true)
       onSubmit({ username, password, email })
+    }
+  }
+
+  // Add handlers for Enter key on each input
+  function handleUsernameKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      handleClick()
+    }
+  }
+  function handlePasswordKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      handleClick()
+    }
+  }
+  function handleEmailKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      handleClick()
     }
   }
 
@@ -195,6 +217,7 @@ export default function LoginForm({
             data-1p-ignore
             ref={usernameRef}
             onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={handleUsernameKeyDown}
           />
         )}
 
@@ -209,6 +232,7 @@ export default function LoginForm({
             data-1p-ignore
             ref={passwordRef}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handlePasswordKeyDown}
           />
         )}
 
@@ -223,6 +247,7 @@ export default function LoginForm({
             data-1p-ignore
             ref={emailRef}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={handleEmailKeyDown}
           />
         )}
 
@@ -248,7 +273,11 @@ export default function LoginForm({
               </motion.div>
             )}
           </AnimatePresence>
-          {buttonLabel}
+          {isLoading ? (
+            <Spinner className="motion-preset-focus-sm" />
+          ) : (
+            buttonLabel
+          )}
         </button>
       </div>
     </div>

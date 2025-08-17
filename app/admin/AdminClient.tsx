@@ -7,14 +7,17 @@ import { Calendar, LogOut, User, CornerDownRight } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import HoldConfirm from "@/components/HoldConfirm"
 import { authClient } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
 
 export default function Admin() {
+  const router = useRouter()
+
   function handleManageRota() {
     console.log("manage rota")
   }
 
-  function handleSwitchToUser() {
-    console.log("switch to user")
+  function handleSwitchToShifts() {
+    router.push("/sylwia")
   }
 
   const [file, setFile] = useState<File | null>(null)
@@ -183,10 +186,10 @@ export default function Admin() {
       >
         <button
           className="rounded-xl md:text-md text-lg w-fit text-gray-800 font-sf-pro-rounded px-0.5 font-medium cursor-pointer hover:opacity-60 hover:scale-[102%] transition-all duration-200 flex items-center gap-2"
-          onClick={handleSwitchToUser}
+          onClick={handleSwitchToShifts}
         >
           <User className="text-gray-800" size={14} strokeWidth={2.5} />
-          Switch to User
+          Switch my Shifts
         </button>
         <button
           className="rounded-xl md:text-md text-lg w-fit text-gray-800 font-sf-pro-rounded px-0.5 font-medium cursor-pointer hover:opacity-60 hover:scale-[102%] transition-all duration-200 flex items-center gap-2"

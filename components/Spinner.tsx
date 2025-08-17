@@ -6,7 +6,10 @@ export default function Spinner({
   className?: string
 }) {
   return (
-    <div className="flex items-center justify-center" title="Loading...">
+    <div
+      className={`flex items-center justify-center ${className}`}
+      title="Loading..."
+    >
       <svg
         stroke="currentColor"
         fill="none"
@@ -14,7 +17,7 @@ export default function Spinner({
         viewBox="0 0 24 24"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`spin-fast text-center ${className}`}
+        className={`spin-fast text-center`}
         height={`${size}em`}
         width={`${size}em`}
         xmlns="http://www.w3.org/2000/svg"

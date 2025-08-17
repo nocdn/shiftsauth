@@ -4,13 +4,18 @@ import { LogOut, MoveRight, X } from "lucide-react"
 import Spinner from "@/components/Spinner"
 import { AnimatePresence, motion } from "motion/react"
 import { authClient } from "@/lib/auth-client"
+import { titleCase } from "@/utils/text"
+import { useRouter } from "next/navigation"
 
 export default function UserNameClient({ username }: { username: string }) {
+  const router = useRouter()
   const [allShifts, setAllShifts] = useState<any[]>([])
   const [shifts, setShifts] = useState<any[]>([])
   const [thisWeekShifts, setThisWeekShifts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [extraDataForShift, setExtraDataForShift] = useState<any>(null)
+
+  const [isLoadingSignOut, setIsLoadingSignOut] = useState<boolean>(false)
 
   function localWeekCommencingToDisplay() {
     const today = new Date()
@@ -95,29 +100,30 @@ export default function UserNameClient({ username }: { username: string }) {
 
   return (
     <div className="flex flex-col gap-1.5 p-8 font-sf-pro-rounded h-dvh">
-      <h1 className="text-2xl font-medium flex items-center justify-between">
-        Hello {username.charAt(0).toUpperCase() + username.slice(1)},
+      <h1 className="text-2xl font-medium flex items-center justify-between motion-preset-blur-up-sm">
+        Hello {titleCase(username)},
         <AnimatePresence>
           {isLoading && (
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1, transition: { duration: 0.25 } }}
-              exit={{ opacity: 0, transition: { duration: 0.3 } }}
+              animate={{ opacity: 1, scale: 1, transition: { duration: 0.18 } }}
+              exit={{ opacity: 0, transition: { duration: 0.2 } }}
             >
               <Spinner className="opacity-50 mt-1" size={0.85} />
             </motion.div>
           )}
         </AnimatePresence>
       </h1>
-      <h2 className="text-[15px] font-medium text-gray-600 font-jetbrains-mono">
+      <h2 className="text-[15px] font-medium text-gray-600 font-jetbrains-mono motion-preset-blur-up-sm motion-delay-100">
         [SHIFTS THIS WEEK]
       </h2>
-      <div className="flex flex-col border border-gray-200 rounded-xl overflow-hidden ml-[1px] divide-y divide-gray-200 mt-5">
+      <div className="flex flex-col border border-gray-200 rounded-xl overflow-hidden ml-[1px] divide-y divide-gray-200 mt-5 motion-preset-blur-up-sm motion-delay-300">
         {daysOfTheWeek.map((dayLabel, index) => {
           const dayShifts = shiftsByDay[index] || []
           const hasShifts = dayShifts.length > 0
           return (
-            <div
+            <motion.div
+              layout="position"
               key={dayLabel}
               className="flex"
               onClick={() => {
@@ -157,10 +163,14 @@ export default function UserNameClient({ username }: { username: string }) {
                 }, 50)
               }}
             >
-              <div className="w-24 shrink-0 bg-gray-50/70 px-4 py-3 text-[12.5px] tracking-[0.14em] text-gray-700 font-jetbrains-mono grid place-items-center">
+              <motion.div
+                layout
+                className="w-24 shrink-0 bg-gray-50/70 px-4 py-3 text-[12.5px] tracking-[0.14em] text-gray-700 font-jetbrains-mono grid place-items-center"
+              >
                 {dayLabel}
-              </div>
-              <div
+              </motion.div>
+              <motion.div
+                layout
                 className={
                   "flex-1 px-2 py-2 min-h-12 grid items-center content-center gap-2 " +
                   (hasShifts ? "bg-white" : "bg-white")
@@ -181,8 +191,8 @@ export default function UserNameClient({ username }: { username: string }) {
                     ))}
                   </div>
                 )}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )
         })}
       </div>
@@ -222,7 +232,7 @@ export default function UserNameClient({ username }: { username: string }) {
                     className="flex items-center justify-between rounded-lg border border-gray-200/70 bg-gray-50/60 px-3 py-2"
                   >
                     <div className="text-gray-800 font-medium font-geist">
-                      {entry.person}
+                      {titleCase(entry.person)}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {entry.shifts.map((s: any, i: number) => (
@@ -250,11 +260,15 @@ export default function UserNameClient({ username }: { username: string }) {
       <motion.button
         className="rounded-xl md:text-md text-lg w-fit text-red-800 font-sf-pro-rounded px-0.5 font-medium cursor-pointer hover:opacity-60 hover:scale-[102%] transition-all duration-200 flex items-center gap-2 mt-auto"
         onClick={async () => {
+          setIsLoadingSignOut(true)
           await authClient.signOut()
+          // then when finished, redirect to login
+          router.push("/login")
         }}
       >
         <LogOut className="text-red-800" size={13.5} strokeWidth={2.5} />
         Sign Out
+        {isLoadingSignOut && <Spinner className="motion-preset-focus-sm" />}
       </motion.button>
     </div>
   )
