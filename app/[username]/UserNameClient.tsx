@@ -223,7 +223,7 @@ export default function UserNameClient({ username }: { username: string }) {
       </div>
       <div className="flex items-center justify-between px-4 pt-2 font-jetbrains-mono opacity-75">
         <div
-          className="flex items-center gap-2 font-medium"
+          className="flex items-center gap-2 font-medium cursor-pointer"
           onClick={() =>
             setCurrentWeekCommencing((prev) => addDaysToISODate(prev, -7))
           }
@@ -231,7 +231,7 @@ export default function UserNameClient({ username }: { username: string }) {
           <ArrowUp size={16} strokeWidth={2.5} /> PREVIOUS
         </div>
         <div
-          className="flex items-center gap-2 font-medium"
+          className="flex items-center gap-2 font-medium cursor-pointer"
           onClick={() =>
             setCurrentWeekCommencing((prev) => addDaysToISODate(prev, 7))
           }
