@@ -109,7 +109,7 @@ export default function LoginForm({
         ? mode === "signin"
           ? "Login"
           : "Continue"
-        : "Create account"
+        : "Finish"
 
   const disabled =
     (step === 1 && username.length === 0) ||

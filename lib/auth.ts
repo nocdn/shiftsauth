@@ -1,22 +1,21 @@
+// lib/auth.ts
 import { betterAuth } from "better-auth"
 import { nextCookies } from "better-auth/next-js"
 import { username, admin as adminPlugin } from "better-auth/plugins"
-import Database from "better-sqlite3"
+import { Pool } from "pg"
 
-const db = new Database("./sqlite.db")
+const pool = new Pool({
+  connectionString: process.env.SUPABASE_DB_URL!,
+  ssl: { rejectUnauthorized: false },
+})
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
-  database: db,
-
+  database: pool,
   emailAndPassword: { enabled: true },
-
   plugins: [
     nextCookies(),
     username(),
-    adminPlugin({
-      defaultRole: "user",
-      adminRoles: ["admin"],
-    }),
+    adminPlugin({ defaultRole: "user", adminRoles: ["admin"] }),
   ],
 })
