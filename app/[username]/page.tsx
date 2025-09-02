@@ -3,27 +3,23 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import UserNameClient from "./UserNameClient"
 import { titleCase } from "@/utils/text"
+import type { Metadata } from "next"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string }
-}) {
-  const username = params.username
+type Props = {
+  params: Promise<{ username: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { username } = await params
   return {
     title: `${titleCase(username)} shifts`,
     description: `User page for Shifts: ${titleCase(username)}`,
   }
 }
 
-export default async function UserPage({
-  params,
-}: {
-  params: Promise<{ username: string }>
-}) {
+export default async function UserPage({ params }: Props) {
+  const { username } = await params
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session) redirect("/login")
-
-  const { username } = await params
   return <UserNameClient username={username} />
 }
