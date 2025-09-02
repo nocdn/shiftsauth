@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useMemo, useState, type CSSProperties } from "react"
-import { LogOut, MoveRight, X } from "lucide-react"
+import { ArrowDown, ArrowUp, LogOut, MoveRight, X } from "lucide-react"
 import Spinner from "@/components/Spinner"
 import { AnimatePresence, motion } from "motion/react"
 import { authClient } from "@/lib/auth-client"
@@ -16,6 +16,9 @@ export default function UserNameClient({ username }: { username: string }) {
   const [extraDataForShift, setExtraDataForShift] = useState<any>(null)
 
   const [isLoadingSignOut, setIsLoadingSignOut] = useState<boolean>(false)
+  const [currentWeekCommencing, setCurrentWeekCommencing] = useState<string>(
+    localWeekCommencingToDisplay(),
+  )
 
   function localWeekCommencingToDisplay() {
     const today = new Date()
@@ -24,6 +27,12 @@ export default function UserNameClient({ username }: { username: string }) {
     const monday = new Date(today)
     monday.setDate(today.getDate() - daysUntilMonday)
     return monday.toISOString().split("T")[0]
+  }
+
+  function addDaysToISODate(isoDate: string, days: number) {
+    const date = new Date(isoDate)
+    date.setDate(date.getDate() + days)
+    return date.toISOString().split("T")[0]
   }
 
   useEffect(() => {
@@ -59,6 +68,22 @@ export default function UserNameClient({ username }: { username: string }) {
     }
     fetchShifts()
   }, [])
+
+  useEffect(() => {
+    const filteredThisWeekShifts = (shifts || []).filter((shift: any) =>
+      shift.week_commencing.includes(currentWeekCommencing),
+    )
+    const parsedWeekShifts = filteredThisWeekShifts.flatMap((person: any) =>
+      (person.shifts || []).map((s: any) =>
+        typeof s === "string" ? JSON.parse(s) : s,
+      ),
+    )
+    setThisWeekShifts(parsedWeekShifts)
+  }, [shifts, currentWeekCommencing])
+
+  useEffect(() => {
+    console.log("Showing week commencing:", currentWeekCommencing)
+  }, [currentWeekCommencing])
 
   const daysOfTheWeek = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
 
@@ -127,11 +152,11 @@ export default function UserNameClient({ username }: { username: string }) {
               key={dayLabel}
               className="flex"
               onClick={() => {
-                const thisWeekCommencing = localWeekCommencingToDisplay()
+                const weekCommencing = currentWeekCommencing
                 const othersForWeek = (allShifts || []).filter(
                   (row: any) =>
                     typeof row.week_commencing === "string" &&
-                    row.week_commencing.includes(thisWeekCommencing) &&
+                    row.week_commencing.includes(weekCommencing) &&
                     row.person_name?.toLowerCase() !== username.toLowerCase(),
                 )
                 const othersWorking = othersForWeek
@@ -195,6 +220,24 @@ export default function UserNameClient({ username }: { username: string }) {
             </motion.div>
           )
         })}
+      </div>
+      <div className="flex items-center justify-between px-4 pt-2 font-jetbrains-mono opacity-75">
+        <div
+          className="flex items-center gap-2 font-medium"
+          onClick={() =>
+            setCurrentWeekCommencing((prev) => addDaysToISODate(prev, -7))
+          }
+        >
+          <ArrowUp size={16} strokeWidth={2.5} /> PREVIOUS
+        </div>
+        <div
+          className="flex items-center gap-2 font-medium"
+          onClick={() =>
+            setCurrentWeekCommencing((prev) => addDaysToISODate(prev, 7))
+          }
+        >
+          NEXT <ArrowDown size={16} strokeWidth={2.5} />
+        </div>
       </div>
       <AnimatePresence>
         {extraDataForShift && (
