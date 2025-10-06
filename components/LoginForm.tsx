@@ -9,6 +9,7 @@ export default function LoginForm({
   mode,
   onSubmit,
   className,
+  isErrorCredentials,
 }: {
   mode: Mode
   onSubmit: (values: {
@@ -17,6 +18,7 @@ export default function LoginForm({
     email?: string
   }) => void
   className?: string
+  isErrorCredentials?: boolean
 }) {
   const [step, setStep] = useState<1 | 2 | 3>(mode === "signin" ? 1 : 1)
   const [username, setUsername] = useState("")
@@ -38,6 +40,13 @@ export default function LoginForm({
     if (step === 2) passwordRef.current?.focus()
     if (step === 3) emailRef.current?.focus()
   }, [step])
+
+  // Stop loading spinner if parent reports credential error
+  useEffect(() => {
+    if (isErrorCredentials && step === 2) {
+      setIsLoading(false)
+    }
+  }, [isErrorCredentials, step])
 
   function isValidUsername(u: string) {
     return /^[a-zA-Z0-9._]{3,30}$/.test(u)
@@ -102,6 +111,19 @@ export default function LoginForm({
     }
   }
 
+  function handleBackToUsername() {
+    setStep(1)
+    setPassword("")
+    setIsLoading(false)
+  }
+
+  function handleBackKeyDown(e: React.KeyboardEvent<HTMLParagraphElement>) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      handleBackToUsername()
+    }
+  }
+
   const buttonLabel =
     step === 1
       ? "Continue"
@@ -118,14 +140,27 @@ export default function LoginForm({
 
   return (
     <div
-      className={`flex flex-col gap-4 font-sf-pro-rounded ${className} w-full`}
+      className={`flex flex-col gap-4 font-sf-pro-rounded ${className} max-w-[80%]`}
     >
       <div className="grid">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
               key="step-1"
-              initial={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              initial={{
+                opacity: 0,
+                y: -25,
+                originX: 0,
+                scale: 0.9,
+                filter: "blur(6px)",
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                originX: 0,
+                scale: 1,
+                filter: "blur(0px)",
+              }}
               exit={{
                 opacity: 0,
                 y: -75,
@@ -166,13 +201,43 @@ export default function LoginForm({
                 scale: 1,
                 filter: "blur(0px)",
               }}
+              exit={{
+                opacity: 0,
+                y: 25,
+                originX: 0,
+                scale: 0.9,
+                filter: "blur(6px)",
+              }}
               transition={{ duration: 0.5, ease: [0, 0, 0.2, 1] }}
               className="flex flex-col gap-0.5 font-semibold col-start-1 row-start-1"
             >
-              <p className="text-xl text-gray-500">
+              <p
+                className="text-xl text-gray-500 cursor-pointer"
+                onClick={handleBackToUsername}
+                onKeyDown={handleBackKeyDown}
+                role="button"
+                tabIndex={0}
+                aria-label="Edit username"
+                title="Edit username"
+              >
                 Hello, {username.charAt(0).toUpperCase() + username.slice(1)}
               </p>
-              <p className="text-xl">What is your password?</p>
+              <AnimatePresence mode="popLayout">
+                <motion.p
+                  key={
+                    isErrorCredentials ? "password-error" : "password-prompt"
+                  }
+                  initial={{ opacity: 0, y: -8, filter: "blur(2px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: 8, filter: "blur(2px)" }}
+                  transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
+                  className={`text-xl ${isErrorCredentials ? "text-red-600" : ""}`}
+                >
+                  {isErrorCredentials
+                    ? "Invalid name or password"
+                    : "What is your password?"}
+                </motion.p>
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
@@ -258,7 +323,7 @@ export default function LoginForm({
             usernameError || passwordError || emailError
               ? "text-red-500 scale-95"
               : ""
-          }`}
+          } ${isErrorCredentials && step === 2 ? "text-red-600" : ""}`}
         >
           <AnimatePresence>
             {(usernameError || passwordError || emailError) && (

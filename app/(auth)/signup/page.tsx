@@ -41,7 +41,7 @@ export default function Signup() {
   }
 
   return (
-    <main className="flex h-dvh w-screen justify-center items-center px-8 motion-preset-blur-up-sm">
+    <main className="flex h-dvh w-screen justify-center items-center md:px-8 motion-preset-blur-up-sm">
       <LoginForm mode="signup" onSubmit={handleSubmit} className="w-96" />
     </main>
   )

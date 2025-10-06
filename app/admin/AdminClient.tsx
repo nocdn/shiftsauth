@@ -202,6 +202,7 @@ export default function Admin() {
           className="rounded-xl md:text-md text-lg w-fit text-red-800 font-sf-pro-rounded px-0.5 font-medium cursor-pointer hover:opacity-60 hover:scale-[102%] transition-all duration-200 flex items-center gap-2"
           onClick={async () => {
             await authClient.signOut()
+            router.push("/")
           }}
         >
           <LogOut className="text-red-800" size={13.5} strokeWidth={2.5} />
